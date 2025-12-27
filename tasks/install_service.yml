@@ -1,5 +1,7 @@
 ---
 - name: Install systemd service files
+  when: sshd_install_service | bool
+
   block:
     - name: Install service unit file
       ansible.builtin.template:
@@ -25,8 +27,6 @@
         group: root
         mode: "0644"
       notify: reload_sshd
-  when: sshd_install_service | bool
-
 - name: Service enabled and running
   ansible.builtin.service:
     name: "{{ sshd_service }}"
@@ -39,7 +39,7 @@
 
 # Due to ansible bug 21026, cannot use service module on RHEL 7
 - name: Enable service in chroot
-  ansible.builtin.command: systemctl enable {{ sshd_service }}  # noqa command-instead-of-module
+  ansible.builtin.command: systemctl enable {{ sshd_service }} # noqa command-instead-of-module
   when:
     - ansible_connection == 'chroot'
     - ansible_os_family == 'RedHat'

@@ -14,7 +14,7 @@
         path: /tmp/ssh_host_rsa_key
         state: absent
 
-    - name: Configure sshd  # noqa var-naming
+    - name: Configure sshd # noqa var-naming
       ansible.builtin.include_role:
         name: ansible-sshd
       vars:
@@ -27,6 +27,8 @@
         sshd_HostKey: /tmp/ssh_host_rsa_key
 
     - name: Verify the options are correctly set
+      tags: tests::verify
+
       block:
         - name: Flush metadata
           ansible.builtin.meta: flush_handlers
@@ -55,7 +57,5 @@
               - "'Banner /etc/good-issue' in config.content | b64decode"
               - "'Ciphers aes128-ctr' in config.content | b64decode"
               - "'HostKey /tmp/ssh_host_rsa_key' in config.content | b64decode"
-      tags: tests::verify
-
     - name: "Restore configuration files"
       ansible.builtin.include_tasks: tasks/restore.yml

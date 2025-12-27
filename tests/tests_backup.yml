@@ -36,7 +36,7 @@
       ansible.builtin.include_role:
         name: ansible-sshd
       vars:
-        sshd_Banner: /tmp/banner  # noqa var-naming
+        sshd_Banner: /tmp/banner # noqa var-naming
       register: second_run
 
     - name: Find new backups files

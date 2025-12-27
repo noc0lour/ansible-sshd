@@ -49,7 +49,7 @@
       when: __sshd_defaults.Include is defined
 
     - name: Check drop in directory mode has not changed
-      assert:
+      ansible.builtin.assert:
         that:
           - drop_in_dir_stat.stat.mode == __sshd_drop_in_dir_mode
       when: __sshd_defaults.Include is defined

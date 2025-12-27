@@ -1,7 +1,7 @@
+---
 name: Run Ansible Check on Ubuntu
 
 on: [push, pull_request]
-
 jobs:
   ubuntu-latest:
     runs-on: ubuntu-latest

@@ -16,6 +16,11 @@
         name: ansible-sshd
 
     - name: Verify the options are correctly set
+      when:
+        - ansible_facts['os_family'] == 'RedHat'
+        - ansible_facts['distribution_major_version']|int > 6
+      tags: tests::verify
+
       block:
         - name: Flush handlers
           ansible.builtin.meta: flush_handlers
@@ -48,11 +53,6 @@
             that:
               - privkey.stat.exists
               - pubkey.stat.exists
-      when:
-        - ansible_facts['os_family'] == 'RedHat'
-        - ansible_facts['distribution_major_version']|int > 6
-      tags: tests::verify
-
     - name: Fake FIPS mode
       block:
         - name: Create temporary directory
@@ -73,7 +73,7 @@
             mode: "0644"
 
         - name: Bind mount the file where we need it
-          ansible.builtin.mount:
+          ansible.posix.mount:
             path: /proc/sys/crypto/fips_enabled
             src: "{{ fips_directory.path }}/fips_enabled"
             opts: bind
@@ -83,14 +83,12 @@
 
     - name: Remove the Ed25519 hostkey
       ansible.builtin.file:
-        path:
-          /etc/ssh/ssh_host_ed25519_key
+        path: /etc/ssh/ssh_host_ed25519_key
         state: absent
 
     - name: Remove the Ed25519 pubkey
       ansible.builtin.file:
-        path:
-          /etc/ssh/ssh_host_ed25519_key.pub
+        path: /etc/ssh/ssh_host_ed25519_key.pub
         state: absent
 
     - name: Run the role with default parameters
@@ -98,6 +96,11 @@
         name: ansible-sshd
 
     - name: Verify the options are correctly set
+      when:
+        - ansible_facts['os_family'] == 'RedHat'
+        - ansible_facts['distribution_major_version']|int > 6
+      tags: tests::verify
+
       block:
         - name: Flush handlers
           ansible.builtin.meta: flush_handlers
@@ -127,15 +130,10 @@
             that:
               - not privkey.stat.exists
               - not pubkey.stat.exists
-      when:
-        - ansible_facts['os_family'] == 'RedHat'
-        - ansible_facts['distribution_major_version']|int > 6
-      tags: tests::verify
-
     - name: Remove the FIPS mode indicators
       block:
         - name: Unmount the file
-          mount:
+          ansible.posix.mount:
             path: /proc/sys/crypto/fips_enabled
             state: unmounted
           failed_when: false

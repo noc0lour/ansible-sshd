@@ -39,7 +39,6 @@ sshd_sysconfig_use_strong_rng: 0
 
 # Empty dicts to avoid errors
 sshd: {}
-
 # The path to sshd_config file. This is useful when creating an included
 # configuration file snippet or configuring second sshd service
 sshd_config_file: "{{ __sshd_config_file }}"
@@ -72,4 +71,4 @@ sshd_hostkey_mode: "{{ __sshd_hostkey_mode }}"
 
 # instead of replacing the whole configuration file, just add a specified
 # snippet
-sshd_config_namespace: null
+sshd_config_namespace:

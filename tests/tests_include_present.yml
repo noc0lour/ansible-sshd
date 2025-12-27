@@ -15,8 +15,8 @@
         regexp: "^Include"
         state: absent
       when:
-        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version']|int > 8) or
-          (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version']|int >= 22)
+        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version']|int > 8) or (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version']|int
+          >= 22)
 
     - name: Create a new configuration in drop-in directory
       ansible.builtin.include_role:
@@ -27,10 +27,16 @@
           Banner: /etc/include-issue
           Ciphers: aes192-ctr
       when:
-        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version']|int > 8) or
-          (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version']|int >= 22)
+        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version']|int > 8) or (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version']|int
+          >= 22)
 
     - name: Verify the options are correctly set
+      when:
+        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version']|int > 8) or (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version']|int
+          >= 22)
+
+      tags: tests::verify
+
       block:
         - name: Flush handlers
           ansible.builtin.meta: flush_handlers
@@ -52,7 +58,7 @@
               - "'Ciphers aes192-ctr' in config.content | b64decode"
               - "'Include /etc/ssh/sshd_config.d/*.conf' not in config.content | b64decode"
               - "'Subsystem sftp  /usr/libexec/openssh/sftp-server' not in config.content | b64decode"
-              - "'Subsystem	sftp	/usr/lib/openssh/sftp-server' not in config.content | b64decode"
+              - "'Subsystem\tsftp\t/usr/lib/openssh/sftp-server' not in config.content | b64decode"
 
         - name: Check common content of the main configuration file
           ansible.builtin.assert:
@@ -73,12 +79,6 @@
               - "config_main.content | b64decode | regex_search('Subsystem\\ssftp\\s/usr/lib/openssh/sftp-server')"
           when: ansible_facts['os_family'] == 'Ubuntu'
 
-      when:
-        - (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version']|int > 8) or
-          (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version']|int >= 22)
-
-      tags: tests::verify
-
     - name: "Restore configuration files"
       ansible.builtin.include_tasks: tasks/restore.yml
 
@@ -91,9 +91,7 @@
   tasks:
     - name: Run only for a specific OS with an capable OpenSSH version
       ansible.builtin.meta: end_play
-      when:
-        ansible_facts['distribution'] != 'Ubuntu'
-        or ansible_facts['distribution_major_version']|int != 20
+      when: ansible_facts['distribution'] != 'Ubuntu' or ansible_facts['distribution_major_version']|int != 20
 
     - name: "Backup configuration files"
       ansible.builtin.include_tasks: tasks/backup.yml
@@ -101,7 +99,7 @@
     - name: Create dummy main configuration file
       # Normally, this should not be needed. For test, however, we need a file
       # different to the one in the first play.
-      file:
+      ansible.builtin.file:
         path: /etc/ssh/custom_sshd_config
         state: touch
 
@@ -111,12 +109,14 @@
       vars:
         sshd_config_file: /etc/ssh/custom_sshd_config.d/custom-drop-in
         sshd_main_config_file: /etc/ssh/custom_sshd_config
-        sshd_drop_in_dir_mode: '0770'
+        sshd_drop_in_dir_mode: "0770"
         sshd:
           Banner: /etc/include-issue
           Ciphers: aes192-ctr
 
     - name: Verify the options are correctly set
+      tags: tests::verify
+
       block:
         - name: Flush handlers
           ansible.builtin.meta: flush_handlers
@@ -138,7 +138,7 @@
               - "'Ciphers aes192-ctr' in custom_drop_in.content | b64decode"
               - "'Include /etc/ssh/custom_sshd_config.d/*.conf' not in custom_drop_in.content | b64decode"
               - "'Subsystem sftp  /usr/libexec/openssh/sftp-server' not in custom_drop_in.content | b64decode"
-              - "'Subsystem	sftp	/usr/lib/openssh/sftp-server' not in custom_drop_in.content | b64decode"
+              - "'Subsystem\tsftp\t/usr/lib/openssh/sftp-server' not in custom_drop_in.content | b64decode"
 
         - name: Check common content of the custom configuration file
           ansible.builtin.assert:
@@ -153,13 +153,11 @@
           register: drop_in_dir_stat
 
         - name: Check drop in directory mode has been set correctly
-          assert:
+          ansible.builtin.assert:
             that:
               - drop_in_dir_stat.stat.isdir | bool
               - drop_in_dir_stat.stat.mode == '0770'
             msg: "effective mode: {{ drop_in_dir_stat.stat.mode }}, desired mode: 0770"
-
-      tags: tests::verify
 
     - name: "Restore configuration files"
       ansible.builtin.include_tasks: tasks/restore.yml

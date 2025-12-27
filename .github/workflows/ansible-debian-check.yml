@@ -1,7 +1,7 @@
+---
 name: Run tests on Debian
 
 on: [push, pull_request]
-
 jobs:
   debian-bullseye:
     runs-on: ubuntu-latest

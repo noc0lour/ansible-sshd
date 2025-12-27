@@ -20,7 +20,7 @@
         name: nobody
         group: nobody
         comment: nobody
-        create_home: no
+        create_home: false
         shell: /sbin/nologin
 
 # Configure alternative sshd_config file
@@ -37,7 +37,7 @@
       AcceptEnv: LANG
       Banner: /etc/issue
       Ciphers: aes256-ctr
-    sshd_Compression: no  # noqa var-naming
+    sshd_Compression: false # noqa var-naming
 
 # Configure second alternative sshd_config file
 - hosts: all
@@ -50,7 +50,7 @@
     sshd:
       Banner: /etc/issue2
       Ciphers: aes128-ctr
-    sshd_MaxStartups: 100  # noqa var-naming
+    sshd_MaxStartups: 100 # noqa var-naming
 
 # Now configure the main sshd_config file
 - hosts: all
@@ -63,7 +63,7 @@
       Ciphers: aes192-ctr
       HostKey:
         - /tmp/ssh_host_ecdsa_key
-    sshd_PasswordAuthentication: no  # noqa var-naming
+    sshd_PasswordAuthentication: false # noqa var-naming
 
 - hosts: all
   vars:
@@ -74,9 +74,10 @@
       - /etc/ssh/sshd_config_custom_second
   tasks:
     - name: Setup variables
-      include_tasks: tasks/setup.yml
-
+      ansible.builtin.include_tasks: tasks/setup.yml
     - name: Verify the options are correctly set
+      tags: tests::verify
+
       block:
         - name: Flush handlers
           ansible.builtin.meta: flush_handlers
@@ -157,7 +158,6 @@
             - ansible_facts['distribution'] == 'Ubuntu'
             - ansible_facts['distribution_major_version']|int >= 22
 
-
         - name: Check content of second configuration file
           ansible.builtin.assert:
             that:
@@ -194,7 +194,5 @@
               - config_stat.stat.gr_name == 'nobody'
               - config_stat.stat.pw_name == 'nobody'
               - config_stat.stat.mode == '0660'
-      tags: tests::verify
-
     - name: "Restore configuration files"
       ansible.builtin.include_tasks: tasks/restore.yml
